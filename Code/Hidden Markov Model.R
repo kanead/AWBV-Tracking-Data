@@ -6,11 +6,16 @@ library(adehabitatLT)
 library(geosphere)
 library(moveHMM)
 library(rworldmap)
-
+library(rworldxtra) # creates high resolution maps 
+# Plot Lat/Long Points On A Google Map
+# load the ggplot2 package
+library(ggplot2)
+# load the ggmap package
+library(ggmap)
 
 setwd("C:\\Users\\akane\\Desktop\\Science\\Manuscripts\\White-backed Vulture Tracking Data\\AWBV-Tracking-Data\\Data")
 
-data <- read.table("475.csv", header=T,sep=",")
+data <- read.table("476.csv", header=T,sep=",")
 head(data)
 data$id<-"ID1"
 length(data$DateTime)
@@ -46,12 +51,35 @@ head(data)
 length(data$lon)
 
 # plot the data
-newmap <- getMap(resolution = "low")
+newmap <- getMap(resolution = "high")
 plot(newmap,
-     xlim = c(28, 32),
-     ylim = c(-30, -24.5),
+     xlim = c(30, 32),
+     ylim = c(-30, -21.5),
      asp = 1)
 points(data$lon,data$lat, cex = .6)
+#---------------------------------------------
+# alternative plotting option with google maps 
+#---------------------------------------------
+# load the data points to be plotted
+gps <- data
+
+# get the map from google maps, centered on the median long/lat. 
+mapImageData <- get_googlemap(
+  center = c(lon = median(gps$lon), lat = median(gps$lat)),
+  zoom = 6,
+  maptype = c("terrain")
+)
+
+# plot the points on the map in red (the aes has some problems inheriting from previous models, so that is why we've FALSE'd the inherit)
+ggmap(mapImageData, extent = "device") +
+  geom_point(inherit.aes = FALSE, aes(x = gps$lon, y = gps$lat),
+             data = gps,
+             colour = gps,
+             size = 0.01,
+             pch = 16
+  )
+
+#
 
 #calculate turning angle (relative, in radians)
 tr<-as.ltraj(data.frame(X=data$lon,Y=data$lat),id=data$id,typeII=F) #create trajectory
